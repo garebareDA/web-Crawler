@@ -6,18 +6,62 @@ import(
 	"net/http"
 	"os"
 	"io"
+	"bufio"
 	"regexp"
 	"github.com/PuerkitoBio/goquery"
 )
 
 func main () {
-//TODO GUIで動かす
+	urlinput()
+}
+
+func urlinput() {
+	fmt.Println("画像を取得するURLを入力してください")
+	urlInput := bufio.NewScanner(os.Stdin)
+	urlInput.Scan()
+	url := urlInput.Text()
+
+	urlMatch := regexp.MustCompile(`^http`)
+
+	if urlMatch.MatchString(url) == true {
+		inputAnsewer(url)
+	} else {
+		fmt.Println("正しいURLを入力してください")
+		time.Sleep(time.Second * 1)
+		urlinput()
+	}
+}
+
+func inputAnsewer(inputURL string) {
+	fmt.Println("ページの先のURLのみから画像を取得しますか？(yes/no)")
+	fmt.Println("yes(指定されたURLのページ中にあるURLの先から画像を取得します)")
+	fmt.Println("no(指定されたURLのページのみから画像を取得します)")
+	yesOrNo := bufio.NewScanner(os.Stdin)
+	yesOrNo.Scan()
+	answer := yesOrNo.Text()
+
+	answerMatchYes := regexp.MustCompile(`yes`)
+	answerMatchNo := regexp.MustCompile(`no`)
+
+	if answerMatchYes.MatchString(answer) == true {
+		fmt.Println("yes")
+		getPage(inputURL)
+
+	} else if answerMatchNo.MatchString(answer) == true {
+		fmt.Println("no")
+		find(inputURL)
+
+	} else {
+		inputAnsewer(inputURL)
+	}
 }
 
 func getPage(url string) {
 	doc, err := goquery.NewDocument(url)
 	if err !=nil {
-		panic(err)
+		fmt.Println("正しいURLを入力してください")
+		time.Sleep(time.Second * 1)
+		urlinput()
 	}
 
 	doc.Find("a").Each(func(_ int, s *goquery.Selection) {
@@ -36,7 +80,9 @@ func getPage(url string) {
 func find(url string) {
 	doc, err := goquery.NewDocument(url)
 	if err !=nil {
-		panic(err)
+		fmt.Println("正しいURLを入力してください")
+		time.Sleep(time.Second * 1)
+		urlinput()
 	}
 
 	doc.Find("img").Each(func(_ int, s *goquery.Selection) {
