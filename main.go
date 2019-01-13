@@ -11,6 +11,9 @@ import(
 	"github.com/PuerkitoBio/goquery"
 )
 
+var Serialization int = 0
+var stock = []string{}
+
 func main () {
 	urlinput()
 }
@@ -24,8 +27,10 @@ func urlinput() {
 	urlMatch := regexp.MustCompile(`^http`)
 
 	if urlMatch.MatchString(url) == true {
+
 		inputAnsewer(url)
 	} else {
+
 		fmt.Println("正しいURLを入力してください")
 		time.Sleep(time.Second * 1)
 		urlinput()
@@ -69,6 +74,7 @@ func getPage(url string) {
 		r := regexp.MustCompile(`http`)
 
 		if r.MatchString(url) == true {
+
 			find(url)
 			fmt.Println(url)
 			time.Sleep(time.Second * 1)
@@ -79,6 +85,7 @@ func getPage(url string) {
 
 func find(url string) {
 	doc, err := goquery.NewDocument(url)
+
 	if err !=nil {
 		fmt.Println("正しいURLを入力してください")
 		time.Sleep(time.Second * 1)
@@ -95,22 +102,39 @@ func find(url string) {
 			fmt.Println(img)
 			time.Sleep(time.Second * 1)
 		}
+
 	})
 }
 
 func getImage(img string) {
-	res, err := http.Get(img)
-	if err != nil {
-		panic(err)
+
+	if arrayContains(stock, img) == false {
+		res, err := http.Get(img)
+		stock = append(stock, img)
+
+		if err != nil {
+			panic(err)
+		}
+
+		defer res.Body.Close()
+
+		os.Mkdir("img", 0777)
+		Serialization++
+		file, _:= os.Create(fmt.Sprintf("./img/download%d.jpg", Serialization))
+
+		defer file.Close()
+
+		io.Copy(file, res.Body)
+	}else{
+		return
 	}
+}
 
-	defer res.Body.Close()
-
-	os.Mkdir("img", 0777)
-
-	file, _:= os.Create(fmt.Sprintf("./img/download%d.jpg", res.Body))
-
-	defer file.Close()
-
-	io.Copy(file, res.Body)
+func arrayContains(arr []string, str string) bool{
+  for _, v := range arr{
+    if v == str{
+      return true
+    }
+  }
+  return false
 }
